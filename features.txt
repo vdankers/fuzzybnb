@@ -1,0 +1,100 @@
+WEL
+CHECK host_acceptance_rate                N/A vervangen, % tekens weghalen zodat het een getal wordt
+CHECK host_response_rate                  N/A vervangen, % tekens weghalen zodat het een getal wordt
+CHECK host_listings_count                 check whether it is the same as the next, if so, delete
+CHECK host_total_listings_count           check for empty entries
+CHECK accommodates                        check for empty entries
+CHECK bathrooms                           check for empty entries
+CHECK bedrooms                            check for empty entries
+CHECK beds                                check for empty entries
+CHECK amenities                           turn list into a number by counting the elements
+CHECK price                               turn into an integer, now it is a string because of the dollar sign attached
+CHECK cleaning_fee                        remove dollar sign to turn it into a number and fill in 0 for empty entries
+CHECK guests_included                     check for empty entries
+CHECK extra_people                        remove dollar sign to turn it into a number
+CHECK minimum_nights                      check for empty entries
+CHECK maximum_nights                      check for empty entries
+CHECK availability_30                     check for empty entries
+CHECK availability_60                     check for empty entries
+CHECK availability_90                     check for empty entries
+CHECK availability_365                    check for empty entries
+CHECK number_of_reviews                   check for empty entries
+CHECK review_scores_rating                check for empty entries
+CHECK review_scores_accuracy              check for empty entries
+CHECK review_scores_cleanliness           check for empty entries
+CHECK review_scores_checkin               check for empty entries
+CHECK review_scores_communication         check for empty entries
+CHECK review_scores_location              check for empty entries
+CHECK review_scores_value                 check for empty entries
+CHECK instant_bookable                    1 for true, 0 for false
+CHECK calculated_host_listings_count      check for empty entries
+CHECK reviews_per_month                   check for empty entries
+
+HALF
+latitude                                  use lat and long to calculate distance to centre (e.g. de dam)
+longitude                                 use lat and long to calculate distance to centre (e.g. de dam)
+summary                                   find public transport information
+description                               find public transport information
+neighborhood_overview                     find public transport information
+transit                                   find public transport information
+host_response_time                        is alphabetical, translate to numerical
+CHECK host_identity_verified                    possibly to 1, 0
+neighbourhood_cleansed                    maybe use for clustering
+cancellation_policy                       is alphabetical, translate to numerical
+
+NIET - verwijderen
+CHECK id
+CHECK listing_url
+CHECK scrape_id
+CHECK last_scraped
+CHECK name
+CHECK space
+CHECK experiences_offered
+CHECK notes
+CHECK access
+CHECK interaction
+CHECK house_rules
+CHECK thumbnail_url
+CHECK medium_url
+CHECK picture_url
+CHECK xl_picture_url
+CHECK host_id
+CHECK host_url
+CHECK host_name
+CHECK host_since
+CHECK host_location
+CHECK host_about
+CHECK host_is_superhost
+CHECK host_thumbnail_url
+CHECK host_verifications
+CHECK host_has_profile_pic
+CHECK host_picture_url
+CHECK host_neighbourhood
+CHECK street
+CHECK neighbourhood
+CHECK neighbourhood_group_cleansed
+CHECK city
+CHECK state
+CHECK zipcode
+CHECK market
+CHECK smart_location
+CHECK country_code
+CHECK country
+CHECK is_location_exact
+CHECK property_type
+CHECK room_type
+CHECK bed_type
+CHECK square_feet
+CHECK weekly_price
+CHECK monthly_price
+CHECK security_deposit
+CHECK calendar_updated
+CHECK has_availability
+CHECK calendar_last_scraped
+CHECK first_review
+CHECK last_review
+CHECK requires_license
+CHECK license
+CHECK jurisdiction_names
+CHECK require_guest_profile_picture
+CHECK require_guest_phone_verification
