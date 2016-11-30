@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
+
+"""
+Date        : december 2016
+Course      : Fundamentals of Fuzzy Logic, UvA
+Project name: Fuzzy Bed and Breakfast
+Students    : David Smelt, Alex Khawalid, Verna Dankers
+
+Description : Preprocesses data 
+Usage       : python preprocessing.py input_data.csv output_prices.csv output_results.csv
+"""
 
 import pandas
 import math
@@ -165,16 +175,21 @@ if __name__ == '__main__':
     parser.add_argument(
         'input',
         help="Csv file with input data",
+        nargs='?'
     )
 
     parser.add_argument(
         'x_output',
         help="Name for csv file to write output to",
+        default='result.csv',
+        nargs='?'
     )
 
     parser.add_argument(
         'y_output',
         help="Name for csv file to write output to",
+        default='prices.csv',
+        nargs='?'
     )
 
     args = parser.parse_args()
