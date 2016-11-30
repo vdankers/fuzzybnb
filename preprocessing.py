@@ -10,13 +10,14 @@ Description : Preprocesses data
 Usage       : python preprocessing.py input_data.csv output_prices.csv output_results.csv
 """
 
+import argparse
 import pandas
 import math
 import csv
 import numpy as np
 from math import radians, cos, sin, asin, sqrt
 
-def preprocess_data(file):
+def preprocess_data(csvfile):
     """
     Remove and adapt columns for the Airbnb data file at a given
     location.
@@ -42,12 +43,11 @@ def preprocess_data(file):
     "review_scores_location","review_scores_value",
     "calculated_host_listings_count","reviews_per_month","guests_included"]
 
-    percentages = ["host_acceptance_rate","host_response_rate"]
-
     pandas.options.mode.chained_assignment = None
-    data = pandas.read_csv(file,usecols=columns)
+    data = pandas.read_csv(csvfile,usecols=columns)
+
     data = convert_true_false(data, ["instant_bookable","host_identity_verified"])
-    data = transform_percentage(data, percentages)
+    data = transform_percentage(data, ["host_acceptance_rate","host_response_rate"])
     data = fill_empty_entries(data, possible_empty)
     data = count_elements(data, ["amenities"])
     data = remove_dollar(data, ["price","cleaning_fee","extra_people"])
@@ -55,7 +55,23 @@ def preprocess_data(file):
     data = distance_from_locations(data, "latitude", "longitude")
     data = transform_cancellation_policy(data, "cancellation_policy")
 
+    # Clip certain columns' values to an interval
+    clip_vals(data, "maximum_nights", 0, 30)
+    clip_vals(data, "distance_to_dam", 0.0, 10.0)
+
+    # Look for occurrence of "metro" ==> new boolean column "has_metro"
+    create_boolean_keyword(data, "metro", "has_metro")
+
     return data
+
+def clip_vals(data, columns, cmin=None, cmax=None):
+    """
+    Clips values of column(s) to between (cmin, cmax).
+    """
+    if not isinstance(columns, list):
+        columns = [columns]
+    for column in columns:
+        data[column] = data[column].clip(cmin, cmax)
 
 def transform_percentage(data, columns):
     """
@@ -150,7 +166,7 @@ def transform_cancellation_policy(data, column):
     return data
 
 def distance_from_locations(data, lat, lon):
-    data["distance_to_dam"] = pandas.Series(np.random.randn(len(data)), index=data.index)
+    data["distance_to_dam"] = pandas.Series(np.zeros(len(data)), index=data.index)
     dam = (52.373, 4.8932)
     for i, entry in enumerate(data[lat]):
         location = (entry, data[lon][i])
@@ -160,12 +176,29 @@ def distance_from_locations(data, lat, lon):
         a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
         c = 2 * asin(sqrt(a))
         distance = 6367 * c
-        data["distance_to_dam"][i] = distance
+
+        # round distance to 3 decimals with Python2 string formatting
+        data["distance_to_dam"][i] = "{0:.3f}".format(round(distance, 3))
     return data
 
-if __name__ == '__main__':
-    import argparse
+def create_boolean_keyword(data, keyword, new_col_name, case=False):
+    """
+    Creates new binary boolean column corresponding to the occurrence of
+    'keyword' in any of the listing's strings.
+    """
+    data[new_col_name] = pandas.Series(np.zeros(len(data), dtype=np.int), index=data.index)
+    count = 0
+    for i, entry in data.iterrows():
+        if any(entry.str.contains(keyword, case=case, na=False, regex=False)):
+            data[new_col_name][i] = 1
+            count += 1
+        else:
+            data[new_col_name][i] = 0
 
+    print "Found {0} occurrences out of {1} for '{2}'.".format(count, len(data), keyword)
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -175,6 +208,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'input',
         help="Csv file with input data",
+        default='setje.csv', # first 1000 listings
         nargs='?'
     )
 
@@ -205,3 +239,4 @@ if __name__ == '__main__':
     del data["neighbourhood_cleansed"]
 
     data = data.to_csv(args.x_output)
+
