@@ -4,7 +4,7 @@ import pandas
 import math
 import csv
 import numpy as np
-from geopy.distance import vincenty
+from math import radians, cos, sin, asin, sqrt
 
 def preprocess_data(file):
     """
@@ -144,7 +144,12 @@ def distance_from_locations(data, lat, lon):
     dam = (52.373, 4.8932)
     for i, entry in enumerate(data[lat]):
         location = (entry, data[lon][i])
-        distance = vincenty(location, dam).meters
+        lon1, lat1, lon2, lat2 = map(radians, [location[1], location[0], dam[1], dam[0]])
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        distance = 6367 * c
         data["distance_to_dam"][i] = distance
     return data
 
@@ -163,12 +168,31 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
-        'output',
+        'x_output',
+        help="Name for csv file to write output to",
+    )
+
+    parser.add_argument(
+        'y_output',
         help="Name for csv file to write output to",
     )
 
     args = parser.parse_args()
-    data = preprocess_data(args.input).to_csv()
-    with open(args.output,'w') as output_file:
+
+    data = preprocess_data(args.input)
+
+    prices = data["price"].to_csv()
+
+    del data["summary"]
+    del data["description"]
+    del data["neighborhood_overview"]
+    del data["transit"]
+    del data["neighbourhood_cleansed"]
+
+    data = data.to_csv()
+    with open(args.x_output,'w') as output_file:
         output_file.write(data)
+
+    with open(args.y_output,'w') as output_file:
+        output_file.write(prices)
 
