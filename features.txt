@@ -40,7 +40,7 @@ transit                                   find public transport information
 CHECK host_response_time                  is alphabetical, translate to numerical
 CHECK host_identity_verified              possibly to 1, 0
 neighbourhood_cleansed                    maybe use for clustering
-cancellation_policy                       is alphabetical, translate to numerical
+CHECK cancellation_policy                 is alphabetical, translate to numerical
 
 NIET - verwijderen
 CHECK id
