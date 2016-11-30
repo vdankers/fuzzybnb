@@ -3,6 +3,8 @@
 import pandas
 import math
 import csv
+import numpy as np
+from geopy.distance import vincenty
 
 def preprocess_data(file):
     """
@@ -40,6 +42,7 @@ def preprocess_data(file):
     data = count_elements(data, ["amenities"])
     data = remove_dollar(data, ["price","cleaning_fee","extra_people"])
     data = transform_host_reponse(data, "host_response_time")
+    data = distance_from_locations(data, "latitude", "longitude")
 
     return data
 
@@ -119,6 +122,15 @@ def transform_host_reponse(data, column):
             data[column][i] = 1
         elif entry == "within a day":
             data[column][i] = 24
+    return data
+
+def distance_from_locations(data, lat, lon):
+    data["distance_to_dam"] = pandas.Series(np.random.randn(len(data)), index=data.index)
+    dam = (52.373, 4.8932)
+    for i, entry in enumerate(data[lat]):
+        location = (entry, data[lon][i])
+        distance = vincenty(location, dam).meters
+        data["distance_to_dam"][i] = distance
     return data
 
 if __name__ == '__main__':
