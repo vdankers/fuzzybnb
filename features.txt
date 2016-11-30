@@ -31,13 +31,13 @@ CHECK calculated_host_listings_count      check for empty entries
 CHECK reviews_per_month                   check for empty entries
 
 HALF
-CHECK latitude                                  use lat and long to calculate distance to centre (e.g. de dam)
-CHECK longitude                                 use lat and long to calculate distance to centre (e.g. de dam)
+CHECK latitude                            use lat and long to calculate distance to centre (e.g. de dam)
+CHECK longitude                           use lat and long to calculate distance to centre (e.g. de dam)
 summary                                   find public transport information
 description                               find public transport information
 neighborhood_overview                     find public transport information
 transit                                   find public transport information
-host_response_time                        is alphabetical, translate to numerical
+CHECK host_response_time                  is alphabetical, translate to numerical
 CHECK host_identity_verified              possibly to 1, 0
 neighbourhood_cleansed                    maybe use for clustering
 cancellation_policy                       is alphabetical, translate to numerical
