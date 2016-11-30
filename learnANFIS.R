@@ -12,13 +12,15 @@ split.test <- 0.2 + split.train
 setwd("/Users/alexkhawalid/fuzzybnb")
 library(frbs)
 options(max.print=999999999)
-listing = read.csv("output.csv", header= TRUE)
+listing = read.csv("result.csv", header= TRUE)
+prices = read.csv("prices.csv", header=TRUE)
+
 
 # split data
-data.train <- listing[1 : (split.train*nrow(listing)),0:(ncol(listing))]
-data.test <- listing[(split.train*nrow(listing)) : split.test*nrow(listing), 0: (ncol(listing))]
-data.cv <- listing[(split.test*nrow(listing)) : nrow(listing), 0: (ncol(listing))]
-data.targets <- listing[(split.train*nrow(listing)): nrow(listing),ncol(listing)]
+data.train <- listing[1 : (split.train*nrow(listing)),1:3]
+data.test <- listing[(split.train*nrow(listing)) : split.test*nrow(listing), 1:3]
+data.cv <- listing[(split.test*nrow(listing)) : nrow(listing), 1:3]
+data.targets <- prices[0:split.train*nrow(prices), 1]
 
 print("Number of columns in data for train, test and cross validation respectively")
 print(ncol(data.train))
@@ -52,13 +54,27 @@ method.type <- "ANFIS"
 # (a < 0.5 || 1 - a > b ? 1 - a : (a < b ? a : b))
 ######################################################
 control <- list(num.labels = 5, max.iter = 100, step.size = 0.1,
-  type.tnorm = "MIN", type.implication.func = "ZADEH", name = "fuzzybnb")
+  type.tnorm = "MIN", type.implication.func = "ZADEH", name = "fuzzybnbANFIS")
 
+print("hoi")
 
 # Learn rules, to get membership functions
 # explanation of arguments:
 # https://www.rdocumentation.org/packages/frbs/versions/3.1-0/topics/frbs.learn
 object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
+# output should be [1] 5.1 4.1 4.1 2.1
+par("mar")
+
+par(mar=c(1,1,1,1))
+
 # show membership functions
 plotMF(object.reg)
+
+
+# test
+res.test <- predict(object.reg, data.test)
+
+# show error
+error = sum((res.test - mean(data.targets))^2) / length(data.targets)
+print(error)
