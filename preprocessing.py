@@ -181,7 +181,7 @@ if __name__ == '__main__':
 
     data = preprocess_data(args.input)
 
-    prices = data["price"].to_csv()
+    prices = data["price"].to_csv(args.y_output)
 
     del data["summary"]
     del data["description"]
@@ -189,10 +189,4 @@ if __name__ == '__main__':
     del data["transit"]
     del data["neighbourhood_cleansed"]
 
-    data = data.to_csv()
-    with open(args.x_output,'w') as output_file:
-        output_file.write(data)
-
-    with open(args.y_output,'w') as output_file:
-        output_file.write(prices)
-
+    data = data.to_csv(args.x_output)
