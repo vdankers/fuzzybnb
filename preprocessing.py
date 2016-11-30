@@ -39,6 +39,7 @@ def preprocess_data(file):
     data = fill_empty_entries(data, possible_empty)
     data = count_elements(data, ["amenities"])
     data = remove_dollar(data, ["price","cleaning_fee","extra_people"])
+    data = transform_host_reponse(data, "host_response_time")
 
     return data
 
@@ -102,6 +103,22 @@ def convert_true_false(data, columns):
                 data[column][i] = 1
             else:
                 data[column][i] = 0
+    return data
+
+def transform_host_reponse(data, column):
+    """
+    Replaces alphabetical values for the host response column into
+    numbers.
+    """
+    for i, entry in enumerate(data[column]):
+        if (type(entry) is float and math.isnan(entry)) or entry == "a few days or more":
+            data[column][i] = 72
+        elif entry == "within a few hours":
+            data[column][i] = 5
+        elif entry == "within an hour":
+            data[column][i] = 1
+        elif entry == "within a day":
+            data[column][i] = 24
     return data
 
 if __name__ == '__main__':
