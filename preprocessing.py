@@ -43,6 +43,7 @@ def preprocess_data(file):
     data = remove_dollar(data, ["price","cleaning_fee","extra_people"])
     data = transform_host_reponse(data, "host_response_time")
     data = distance_from_locations(data, "latitude", "longitude")
+    data = transform_cancellation_policy(data, "cancellation_policy")
 
     return data
 
@@ -122,6 +123,20 @@ def transform_host_reponse(data, column):
             data[column][i] = 1
         elif entry == "within a day":
             data[column][i] = 24
+    return data
+
+def transform_cancellation_policy(data, column):
+    """
+    Replaces alphabetical values for the cancellation policy column into
+    numbers.
+    """
+    for i, entry in enumerate(data[column]):
+        if (type(entry) is float and math.isnan(entry)) or entry == "strict":
+            data[column][i] = 2
+        elif entry == "moderate":
+            data[column][i] = 1
+        elif entry == "flexible":
+            data[column][i] = 0
     return data
 
 def distance_from_locations(data, lat, lon):
