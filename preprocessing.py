@@ -56,22 +56,22 @@ def preprocess_data(csvfile):
     data = transform_cancellation_policy(data, "cancellation_policy")
 
     # Clip certain columns' values to an interval
-    clip_vals(data, "maximum_nights", 0, 30)
-    clip_vals(data, "distance_to_dam", 0.0, 10.0)
+    clip_vals(data, "maximum_nights", (0, 30))
+    clip_vals(data, "distance_to_dam", (0.0, 10.0))
 
     # Look for occurrence of "metro" ==> new boolean column "has_metro"
     create_boolean_keyword(data, "metro", "has_metro")
 
     return data
 
-def clip_vals(data, columns, cmin=None, cmax=None):
+def clip_vals(data, columns, interval):
     """
-    Clips values of column(s) to between (cmin, cmax).
+    Clips values of column(s) to an interval.
     """
     if not isinstance(columns, list):
         columns = [columns]
     for column in columns:
-        data[column] = data[column].clip(cmin, cmax)
+        data[column] = data[column].clip(interval[0], interval[1])
 
 def transform_percentage(data, columns):
     """
@@ -178,7 +178,8 @@ def distance_from_locations(data, lat, lon):
         distance = 6367 * c
 
         # round distance to 3 decimals with Python2 string formatting
-        data["distance_to_dam"][i] = "{0:.3f}".format(round(distance, 3))
+        data["distance_to_dam"][i] = "{:10.3f}".format(round(distance, 3))
+        #print distance, "->", data["distance_to_dam"][i]
     return data
 
 def create_boolean_keyword(data, keyword, new_col_name, case=False):
@@ -192,8 +193,6 @@ def create_boolean_keyword(data, keyword, new_col_name, case=False):
         if any(entry.str.contains(keyword, case=case, na=False, regex=False)):
             data[new_col_name][i] = 1
             count += 1
-        else:
-            data[new_col_name][i] = 0
 
     print "Found {0} occurrences out of {1} for '{2}'.".format(count, len(data), keyword)
 
