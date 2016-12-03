@@ -6,7 +6,7 @@ Course      : Fundamentals of Fuzzy Logic, UvA
 Project name: Fuzzy Bed and Breakfast
 Students    : David Smelt, Alex Khawalid, Verna Dankers
 
-Description : Preprocesses data 
+Description : Preprocesses data
 Usage       : python preprocessing.py input_data.csv output_prices.csv output_results.csv
 """
 
@@ -56,11 +56,13 @@ def preprocess_data(csvfile):
     data = transform_cancellation_policy(data, "cancellation_policy")
 
     # Clip certain columns' values to an interval
-    clip_vals(data, "maximum_nights", (0, 30))
-    clip_vals(data, "distance_to_dam", (0.0, 10.0))
+    data = clip_vals(data, "maximum_nights", (0, 30))
+    data = clip_vals(data, "distance_to_dam", (0.0, 10.0))
 
     # Look for occurrence of "metro" ==> new boolean column "has_metro"
-    create_boolean_keyword(data, "metro", "has_metro")
+    data = create_boolean_keyword(data, "metro", "has_metro")
+
+    data = data[data.price < 1500]
 
     return data
 
@@ -72,6 +74,7 @@ def clip_vals(data, columns, interval):
         columns = [columns]
     for column in columns:
         data[column] = data[column].clip(interval[0], interval[1])
+    return data
 
 def transform_percentage(data, columns):
     """
@@ -142,13 +145,13 @@ def transform_host_reponse(data, column):
     """
     for i, entry in enumerate(data[column]):
         if (type(entry) is float and math.isnan(entry)) or entry == "a few days or more":
-            data[column][i] = 72
+            data[column][i] = 4
         elif entry == "within a few hours":
-            data[column][i] = 5
+            data[column][i] = 2
         elif entry == "within an hour":
             data[column][i] = 1
         elif entry == "within a day":
-            data[column][i] = 24
+            data[column][i] = 3
     return data
 
 def transform_cancellation_policy(data, column):
@@ -165,6 +168,8 @@ def transform_cancellation_policy(data, column):
             data[column][i] = 0
     return data
 
+# SOURCE: http://stackoverflow.com/questions/4913349/haversine-formula-in-
+# python-bearing-and-distance-between-two-gps-points
 def distance_from_locations(data, lat, lon):
     data["distance_to_dam"] = pandas.Series(np.zeros(len(data)), index=data.index)
     dam = (52.373, 4.8932)
@@ -178,7 +183,8 @@ def distance_from_locations(data, lat, lon):
         distance = 6367 * c
 
         # round distance to 3 decimals with Python2 string formatting
-        data["distance_to_dam"][i] = "{:10.3f}".format(round(distance, 3))
+        # data["distance_to_dam"][i] = "{:10.3f}".format(round(distance, 3))
+        data["distance_to_dam"][i] = distance
         #print distance, "->", data["distance_to_dam"][i]
     return data
 
@@ -195,6 +201,7 @@ def create_boolean_keyword(data, keyword, new_col_name, case=False):
             count += 1
 
     print "Found {0} occurrences out of {1} for '{2}'.".format(count, len(data), keyword)
+    return data
 
 
 if __name__ == '__main__':
@@ -236,6 +243,8 @@ if __name__ == '__main__':
     del data["neighborhood_overview"]
     del data["transit"]
     del data["neighbourhood_cleansed"]
+    del data["longitude"]
+    del data["latitude"]
 
     data = data.to_csv(args.x_output)
 
