@@ -64,6 +64,8 @@ def preprocess_data(csvfile):
 
     data = data[data.price < 1500]
 
+    data = data.reindex(np.random.permutation(data.index))
+
     return data
 
 def clip_vals(data, columns, interval):
@@ -245,6 +247,7 @@ if __name__ == '__main__':
     del data["neighbourhood_cleansed"]
     del data["longitude"]
     del data["latitude"]
+    del data["price"]
 
     data = data.to_csv(args.x_output)
 
