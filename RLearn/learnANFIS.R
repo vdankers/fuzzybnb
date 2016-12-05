@@ -22,8 +22,6 @@ method.type <- "ANFIS"
 control <- list(num.labels = 5, max.iter = 100, step.size = 0.1,
   type.tnorm = "MIN", type.implication.func = "ZADEH", name = "fuzzybnbANFIS")
 
-print("hoi")
-
 # Learn rules, to get membership functions
 # explanation of arguments:
 # https://www.rdocumentation.org/packages/frbs/versions/3.1-0/topics/frbs.learn

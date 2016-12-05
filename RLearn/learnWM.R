@@ -10,8 +10,6 @@ method.type <- "WM"
 control <- list(num.labels = 5, type.mf = "GAUSSIAN", type.tnorm = "MIN",
   type.defuz = "COG", type.implication.func = "ZADEH", name = "fuzzybnbWM")
 
-print("hoi")
-
 # Learn rules, to get membership functions
 # explanation of arguments:
 # https://www.rdocumentation.org/packages/frbs/versions/3.1-0/topics/frbs.learn
@@ -27,9 +25,10 @@ par(mar=c(1,1,1,1))
 plotMF(object.reg)
 dev.off()
 
+print("Done-ish")
 # test
 res.test <- predict(object.reg, data.test)
 
-# show error
+# show error 0.05660747
 error = sum((res.test - mean(data.targets))^2) / length(data.targets)
 print(error)
