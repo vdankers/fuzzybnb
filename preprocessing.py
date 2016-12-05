@@ -16,9 +16,6 @@ import math
 import csv
 import numpy as np
 from math import radians, cos, sin, asin, sqrt
-from sklearn.cluster import Birch
-from sklearn.linear_model import Ridge
-from collections import Counter
 
 def preprocess_data(csvfile):
     """
@@ -67,7 +64,7 @@ def preprocess_data(csvfile):
 
     data = data[data.price < 1500]
 
-    #data = data.reindex(np.random.permutation(data.index))
+    data = data.reindex(np.random.permutation(data.index))
 
     return data
 
@@ -208,32 +205,6 @@ def create_boolean_keyword(data, keyword, new_col_name, case=False):
     print "Found {0} occurrences out of {1} for '{2}'.".format(count, len(data), keyword)
     return data
 
-def pretty_print_linear(coefs, names = None, sort = False):
-    lst = zip(coefs, names)
-    if sort:
-        lst = sorted(lst,  key = lambda x:-np.abs(x[0]))
-    return "\n".join("%s * %s" % (round(coef, 3), name)
-                                   for coef, name in lst)
-
-def select_features(X, y, names, nfeat, verbose=True):
-    """
-    Selects nfeat features from data, by L2 Ridge regression
-    """
-    result = []
-
-    ridge = Ridge(alpha=10)
-    ridge.fit(X, y)
-    if verbose:
-        print "Selecting top {} features from Ridge feature ranking:".format(nfeat)
-
-    zipped = zip(ridge.coef_, names)
-    lst = sorted(zipped, key = lambda x:-np.abs(x[0]))
-    for coef, name in lst:
-        result += [name]
-        if verbose:
-            print round(np.abs(coef), 3), name
-
-    return result[0:nfeat]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -276,21 +247,7 @@ if __name__ == '__main__':
     del data["neighbourhood_cleansed"]
     del data["longitude"]
     del data["latitude"]
-
-    # Remove boolean inputs
-    del data["host_identity_verified"]
-    del data["instant_bookable"]
-    del data["has_metro"]
-
-    # Cluster listings by price
-    X1 = data.as_matrix(columns=["price"])
-    clustered = Birch(n_clusters=6).fit(X1)
-    print "Price clusters: " + str(Counter(clustered.labels_))
     del data["price"]
 
-    # Select 10 most important features as resulting columns
-    X = data.as_matrix()
-    y = clustered.labels_
-    names = list(data.columns.values)
-    selected = select_features(X, y, names, 10)
-    data[selected].to_csv(args.x_output)
+    data = data.to_csv(args.x_output)
+
