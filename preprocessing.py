@@ -65,9 +65,9 @@ def preprocess_data(csvfile):
     # Look for occurrence of "metro" ==> new boolean column "has_metro"
     data = create_boolean_keyword(data, "metro", "has_metro")
 
-    data = data[data.price < 1500]
+    data = data[data.price < 500]
 
-    #data = data.reindex(np.random.permutation(data.index))
+    data = data.reindex(np.random.permutation(data.index))
 
     return data
 
@@ -250,16 +250,30 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
-        'x_output',
+        'train_x_output',
         help="Name for csv file to write output to",
-        default='result.csv',
+        default='train_features.csv',
         nargs='?'
     )
 
     parser.add_argument(
-        'y_output',
+        'test_x_output',
         help="Name for csv file to write output to",
-        default='prices.csv',
+        default='test_features.csv',
+        nargs='?'
+    )
+
+    parser.add_argument(
+        'train_y_output',
+        help="Name for csv file to write output to",
+        default='train_prices.csv',
+        nargs='?'
+    )
+
+    parser.add_argument(
+        'test_y_output',
+        help="Name for csv file to write output to",
+        default='test_prices.csv',
         nargs='?'
     )
 
@@ -267,7 +281,14 @@ if __name__ == '__main__':
 
     data = preprocess_data(args.input)
 
-    prices = data["price"].to_csv(args.y_output)
+    n = int(len(data)*0.8)
+
+    train_data = data[0:n]
+    test_data = data[n:]
+
+    train_data["price"].to_csv(args.train_y_output)
+    test_data["price"].to_csv(args.test_y_output)
+
 
     del data["summary"]
     del data["description"]
@@ -284,13 +305,19 @@ if __name__ == '__main__':
 
     # Cluster listings by price
     X1 = data.as_matrix(columns=["price"])
+
     clustered = Birch(n_clusters=6).fit(X1)
     print "Price clusters: " + str(Counter(clustered.labels_))
+
     del data["price"]
+    del train_data["price"]
+    del test_data["price"]
+
 
     # Select 10 most important features as resulting columns
     X = data.as_matrix()
     y = clustered.labels_
     names = list(data.columns.values)
     selected = select_features(X, y, names, 10)
-    data[selected].to_csv(args.x_output)
+    train_data[selected].to_csv(args.train_x_output)
+    test_data[selected].to_csv(args.test_x_output)
