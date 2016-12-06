@@ -208,32 +208,30 @@ def create_boolean_keyword(data, keyword, new_col_name, case=False):
     print "Found {0} occurrences out of {1} for '{2}'.".format(count, len(data), keyword)
     return data
 
-def pretty_print_linear(coefs, names = None, sort = False):
-    lst = zip(coefs, names)
-    if sort:
-        lst = sorted(lst,  key = lambda x:-np.abs(x[0]))
-    return "\n".join("%s * %s" % (round(coef, 3), name)
-                                   for coef, name in lst)
-
 def select_features(X, y, names, nfeat, verbose=True):
     """
     Selects nfeat features from data, by L2 Ridge regression
     """
     result = []
+    frac = 0
 
     ridge = Ridge(alpha=10)
     ridge.fit(X, y)
     if verbose:
         print "Selecting top {} features from Ridge feature ranking:".format(nfeat)
 
-    zipped = zip(ridge.coef_, names)
+    zipped = zip(np.abs(ridge.coef_), names)
     lst = sorted(zipped, key = lambda x:-np.abs(x[0]))
-    for coef, name in lst:
+    for coef, name in lst[0:nfeat]:
         result += [name]
+        frac += coef
         if verbose:
-            print round(np.abs(coef), 3), name
+            print round(coef, 3), name
 
-    return result[0:nfeat]
+    if verbose:
+        print "Selected features comprise {}% of Ridge regression coefficients.".format(round(frac * 100, 2))
+
+    return result
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

@@ -1,5 +1,4 @@
 # type of method
-# Try out ANFIS just to see if it works
 method.type <- "HYFIS"
 
 # a list containing all arguments
@@ -21,7 +20,7 @@ object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
 
 # show membership functions
-pdf("HYFISMF.pdf")
+pdf("RLearn/HYFISMF.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plotMF(object.reg)
@@ -31,5 +30,5 @@ dev.off()
 res.test <- predict(object.reg, data.test)
 
 # show error
-error = sum((res.test - mean(data.targets))^2) / length(data.targets)
+error = sum(abs(res.test - data.targets))/length(data.targets)
 print(error)

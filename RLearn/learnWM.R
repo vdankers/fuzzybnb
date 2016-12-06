@@ -19,7 +19,7 @@ object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
 
 # show membership functions
-# pdf("WMMF.pdf")
+# pdf("Rlearn/WMMF.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plotMF(object.reg)
@@ -29,6 +29,6 @@ print("Done-ish")
 # test
 res.test <- predict(object.reg, data.test)
 
-# show error 0.05660747
-error = sum((res.test - mean(data.targets))^2) / length(data.targets)
+# show MAE
+error = sum(abs(res.test - data.targets))/length(data.targets)
 print(error)
