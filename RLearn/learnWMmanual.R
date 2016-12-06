@@ -1,0 +1,10 @@
+source("RLearn/mfs.R")
+
+MF <- fuzzifier(data.train, num.varinput = 11, num.labels.input = 5, varinp.mf = manualMFs)
+# rule <- rulebase(type.model = "TSK", rule)
+# names.varinput <- c('bedrooms','distance_to_dam','accommodates','review_scores_communication','review_scores_location','host_response_time','bathrooms','beds','reviews_per_month','review_scores_value','price')
+# inference(MF, rule, names.varinput, type.tnorm = 1, type.snorm = 1)
+#
+# mod <- c(num.labels = 5, varout.mf, rule, rule.data.num, varinp.mf = manualMFs, type.model = 'TSK', func.tsk, class )
+#
+# frbsObjectFacgtory(mod)

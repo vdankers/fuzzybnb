@@ -1,5 +1,4 @@
 # type of method
-# Try out ANFIS just to see if it works
 method.type <- "ANFIS"
 
 # a list containing all arguments
@@ -33,7 +32,7 @@ par("mar")
 par(mar=c(1,1,1,1))
 
 # show membership functions
-pdf("ANFISMF.pdf")
+pdf("RLearn/ANFISMF.pdf")
 par("mar")
 
 par(mar=c(1,1,1,1))
@@ -44,5 +43,5 @@ dev.off()
 res.test <- predict(object.reg, data.test)
 
 # show error
-error = sum((res.test - mean(data.targets))^2) / length(data.targets)
+error = sum(abs(res.test - data.targets))/length(data.targets)
 print(error)
