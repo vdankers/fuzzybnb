@@ -30,7 +30,7 @@ def build_R_memberships(fname):
 
                 for term in line:
                     if len(term) < 5:
-                        term.append(0)
+                        term.append('NA')
 
                     i = 0
                     while (i < 5):
@@ -102,10 +102,10 @@ def build_ML_memberships(fname):
         inps +=1
     return matlabstring
 
-# mfs = build_R_memberships('membershipfunctions.txt')
-# mffile = open('./RLearn/mfs.R', 'w')
-# mffile.write(mfs)
-# mffile.close()
+mfs = build_R_memberships('membershipfunctions.txt')
+mffile = open('./RLearn/mfs.R', 'w')
+mffile.write(mfs)
+mffile.close()
 
-mfs = build_ML_memberships('membershipfunctions.txt')
-print mfs
+# mfs = build_ML_memberships('membershipfunctions.txt')
+# print mfs

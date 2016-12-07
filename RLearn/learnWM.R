@@ -1,34 +1,50 @@
-# type of method
-# Try out ANFIS just to see if it works
 method.type <- "WM"
 
-# a list containing all arguments
-# differs per method
-# 5 linguistic terms, 100 maximum iterations, step size 0.1
-# tnorm is min, implication function is Zadeh, name is fuzzybnb
-# implication function applies to rules, Zadeh function means
-control <- list(num.labels = 5, type.mf = "GAUSSIAN", type.tnorm = "MIN",
-  type.defuz = "COG", type.implication.func = "ZADEH", name = "fuzzybnbWM")
+# params needed to run frbs.learn
+control <- list(num.labels = 6, type.mf = "GAUSSIAN", type.tnorm = "PRODUCT",
+  type.defuz = "COG", type.implication.func = "DIENES_RESHER", name = "fuzzybnbWM")
+
 
 # Learn rules, to get membership functions
 # explanation of arguments:
 # https://www.rdocumentation.org/packages/frbs/versions/3.1-0/topics/frbs.learn
 object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
-# output should be [1] 5.1 4.1 4.1 2.1
-
-
 # show membership functions
-# pdf("Rlearn/WMMF.pdf")
+
+print("Learning phase is over, starting testing")
+
+res.test <- predict(object.reg, data.test)
+
+# show MAE
+error = sum(abs(data.targets-res.test))/length(data.targets)
+print(error)
+save.image(file=im)
+
+
+# plot some figures
+pdf("RPlots/WMMF-latest.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plotMF(object.reg)
 dev.off()
 
-print("Done-ish")
-# test
-res.test <- predict(object.reg, data.test)
+pdf("Rlearn/WMErrorRatio.pdf")
+par("mar")
+par(mar=c(1,1,1,1))
+plotthis <- c()
+i <- 1
+while (i < 200) {
+  plotthis[i] <- length(which(abs(res.test-data.targets)>i))/length(data.targets)
+  i <- i + 1
+}
+plot(plotthis, xlab="error in amount of euros", ylab="percentage of data set with error higher than x")
+dev.off()
 
-# show MAE
-error = sum(abs(res.test - data.targets))/length(data.targets)
-print(error)
+
+pdf("Rlearn/WMTargetsVsPredict.pdf")
+par("mar")
+par(mar=c(1,1,1,1))
+plot(res.test, col="red", ylab="prices", xlab="index")
+points(data.targets)
+dev.off()
