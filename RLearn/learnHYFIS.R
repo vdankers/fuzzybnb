@@ -7,7 +7,7 @@ method.type <- "HYFIS"
 # tnorm is min, implication function is Zadeh, name is fuzzybnb
 # implication function applies to rules, Zadeh function means
 control <- list(num.labels = 5, max.iter = 100, step.size = 0.1,
-  type.tnorm = "MIN", type.defuz = "COG", type.implication.func = "ZADEH",
+  type.tnorm = "PRODUCT", type.defuz = "COG", type.implication.func = "DIENES_RESHER",
   name = "fuzzybnbHYFIS")
 
 

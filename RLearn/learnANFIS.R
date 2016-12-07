@@ -19,7 +19,7 @@ method.type <- "ANFIS"
 # (a < 0.5 || 1 - a > b ? 1 - a : (a < b ? a : b))
 ######################################################
 control <- list(num.labels = 5, max.iter = 100, step.size = 0.1,
-  type.tnorm = "MIN", type.implication.func = "ZADEH", name = "fuzzybnbANFIS")
+  type.tnorm = "PRODUCT", type.implication.func = "DIENES_RESHER", name = "fuzzybnbANFIS")
 
 # Learn rules, to get membership functions
 # explanation of arguments:

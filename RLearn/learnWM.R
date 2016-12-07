@@ -1,7 +1,7 @@
 method.type <- "WM"
 
 # params needed to run frbs.learn
-control <- list(num.labels = 6, type.mf = "GAUSSIAN", type.tnorm = "PRODUCT",
+control <- list(num.labels = 8, type.mf = "GAUSSIAN", type.tnorm = "PRODUCT",
   type.defuz = "COG", type.implication.func = "DIENES_RESHER", name = "fuzzybnbWM")
 
 
