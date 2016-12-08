@@ -41,7 +41,7 @@ for (mf in mfs) {
   print(error)
 
   # save workspace for easy access and generating figures
-  save.image(file=as.character(numlab))
+  save.image(file=as.character(mf))
 }
 
 for (norm in norms) {

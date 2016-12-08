@@ -1,23 +1,14 @@
 # type of method
 method.type <- "HYFIS"
 
-# a list containing all arguments
-# differs per method
-# 5 linguistic terms, 100 maximum iterations, step size 0.1
-# tnorm is min, implication function is Zadeh, name is fuzzybnb
-# implication function applies to rules, Zadeh function means
+# a list containing all parameters
 control <- list(num.labels = 5, max.iter = 100, step.size = 0.1,
   type.tnorm = "PRODUCT", type.defuz = "COG", type.implication.func = "DIENES_RESHER",
   name = "fuzzybnbHYFIS")
 
 
-# Learn rules, to get membership functions
-# explanation of arguments:
-# https://www.rdocumentation.org/packages/frbs/versions/3.1-0/topics/frbs.learn
+# Get frbs object
 object.reg <- frbs.learn(data.train, range.data, method.type, control)
-
-# output should be [1] 5.1 4.1 4.1 2.1
-
 
 # show membership functions
 pdf("RLearn/HYFISMF.pdf")
