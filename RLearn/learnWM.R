@@ -17,13 +17,13 @@ save.image(file="Latest-wm")
 
 
 # plot some figures
-pdf("RPlots/WMMF-latest.pdf")
+pdf("Rplots/WMMF-latest.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plotMF(object.reg)
 dev.off()
 
-pdf("Rlearn/WMErrorRatio.pdf")
+pdf("Rplots/WMErrorRatio.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plotthis <- c()
@@ -36,7 +36,7 @@ plot(plotthis, xlab="error in amount of euros", ylab="percentage of data set wit
 dev.off()
 
 
-pdf("Rlearn/WMTargetsVsPredict.pdf")
+pdf("Rplots/WMTargetsVsPredict.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plot(res.test, col="red", ylab="prices", xlab="index")

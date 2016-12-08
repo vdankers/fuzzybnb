@@ -9,7 +9,7 @@ control <- list(num.labels = 5, max.iter = 100, step.size = 0.1,
 object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
 # show membership functions
-pdf("RLearn/ANFISMF.pdf")
+pdf("Rplots/ANFISMF.pdf")
 par("mar")
 
 par(mar=c(1,1,1,1))

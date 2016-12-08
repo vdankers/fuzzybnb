@@ -9,28 +9,23 @@
 
 
 # set this to project directory
-setwd('~/fuzzybnb/')
+# setwd('~/fuzzybnb/RLearn/')
 library(frbs)
 options(max.print=999999999)
 
 # read data and remove id columns
-data.train <- read.csv("train_features.csv", header=TRUE)
-prices <- read.csv("train_prices.csv", header=FALSE)
+data.train <- read.csv("../train_features.csv", header=TRUE)
+prices <- read.csv("../train_prices.csv", header=FALSE)
 data.train <- cbind(data.train[,2:ncol(data.train)],prices)
 
-data.test <- read.csv("test_features.csv", header=TRUE)
+data.test <- read.csv("../test_features.csv", header=TRUE)
 data.test <- data.test[, 2:ncol(data.test)]
-data.targets <- read.csv("train_prices.csv", header=FALSE)
-
-print(ncol(data.test))
-print(ncol(data.train))
-print(nrow(data.test))
-print(nrow(data.targets))
+data.targets <- read.csv("../train_prices.csv", header=FALSE)
 
 # get range of inputs
 range.data <- matrix(apply(rbind(data.train,cbind(data.test,data.targets)), 2, range), nrow=2)
 
-# source("RLearn/learnWMTestParams.R")
-source("RLearn/learnWM.R")
-# source("RLearn/learnHYFIS.R")
-# source("RLearn/learnANFIS.R")
+# source("learnWMTestParams.R")
+source("learnWM.R")
+# source("learnHYFIS.R")
+# source("learnANFIS.R")
