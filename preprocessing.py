@@ -430,8 +430,8 @@ if __name__ == '__main__':
     test_data = data[n:]
 
     # Output both y-vectors to CSV-file
-    train_data["price"].to_csv(args.train_y_output, index=False)
-    test_data["price"].to_csv(args.test_y_output, index=False)
+    train_data["price"].to_csv(args.train_y_output, index=False, decimal='.')
+    test_data["price"].to_csv(args.test_y_output, index=False, decimal='.')
 
     # Cluster listings by price
     # TODO: verify clustering method
@@ -452,5 +452,5 @@ if __name__ == '__main__':
     selected = select_features(X, y, names, 10)
 
     # Output both X-vectors to their respective CSV-files
-    train_data[selected].to_csv(args.train_x_output)
-    test_data[selected].to_csv(args.test_x_output)
+    train_data[selected].to_csv(args.train_x_output, decimal='.')
+    test_data[selected].to_csv(args.test_x_output, decimal='.')
