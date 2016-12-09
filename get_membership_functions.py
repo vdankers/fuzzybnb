@@ -1,8 +1,10 @@
+#!/usr/bin/python
+
 """
 Date        : december 2016
-Course      : Fundamentals of Fuzzy Logic, UvA
+Course      : Fundamentals of Fuzzy Logic, University of Amsterdam
 Project name: Fuzzy Bed and Breakfast
-Students    : David Smelt, Alex Khawalid, Verna Dankers
+Authors     : David Smelt, Alex Khawalid, Verna Dankers
 
 Description : Plot membership functions for the data based on
               clusters as found by the KMeans algorithm

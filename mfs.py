@@ -2,9 +2,9 @@
 
 """
 Date        : december 2016
-Course      : Fundamentals of Fuzzy Logic, UvA
+Course      : Fundamentals of Fuzzy Logic, University of Amsterdam
 Project name: Fuzzy Bed and Breakfast
-Students    : David Smelt, Alex Khawalid, Verna Dankers
+Authors     : David Smelt, Alex Khawalid, Verna Dankers
 
 Description : Convert membership functions to format readable by R or matlab
 Usage       : python mfs.py

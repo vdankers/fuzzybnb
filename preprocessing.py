@@ -2,9 +2,9 @@
 
 """
 Date         : december 2016
-Course       : Fundamentals of Fuzzy Logic, UvA
+Course       : Fundamentals of Fuzzy Logic, University of Amsterdam
 Project name : Fuzzy Bed and Breakfast
-Students     : David Smelt, Alex Khawalid, Verna Dankers
+Authors      : David Smelt, Alex Khawalid, Verna Dankers
 
 Description  : Preprocesses data
 Cmdline args : input_csv fraction_train_set output_prices.csv output_results.csv
@@ -32,7 +32,7 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import Counter
 
 """
-Global variables for: - VERBOSITY,
+Global variables for: - print verbosity,
                         ... passing argument --noverbose will set it to False;
                       - randomized order of listings,
                         ... passing argument --norandom will set it to False
@@ -89,7 +89,8 @@ def preprocess_data(csvfile):
     pd.options.mode.chained_assignment = None
     data = pd.read_csv(csvfile,usecols=columns)
 
-    data = convert_true_false(data, ["instant_bookable","host_identity_verified"])
+    # Ensure all features are converted to floats
+    #data = convert_true_false(data, ["instant_bookable","host_identity_verified"])
     data = transform_percentage(data, ["host_acceptance_rate","host_response_rate"])
     data = fill_empty_entries(data, possible_empty)
     data = count_elements(data, ["amenities"])
@@ -98,13 +99,18 @@ def preprocess_data(csvfile):
     data = distance_from_locations(data, "latitude", "longitude")
     data = transform_cancellation_policy(data, "cancellation_policy")
 
-    # Clip certain columns' values to an interval
-    data = clip_vals(data, "maximum_nights", (0, 30))
-    data = clip_vals(data, "distance_to_dam", (0.0, 10.0))
+    # Remove obsolete columns
+    del data["summary"]
+    del data["description"]
+    del data["neighborhood_overview"]
+    del data["transit"]
+    del data["neighbourhood_cleansed"]
+    del data["longitude"]
+    del data["latitude"]
 
-    # Look for occurrence of "metro" ==> new boolean column "has_metro"
-    #data = create_boolean_keyword(data, "metro", "has_metro")
-    # TODO: replace with distance_to_metro
+    # Remove boolean columns
+    del data["host_identity_verified"]
+    del data["instant_bookable"]
 
     # Remove outliers where listing price > MAX_PRICE
     N = len(data)
@@ -112,6 +118,16 @@ def preprocess_data(csvfile):
     printv("Pruned {} listings for having price > {}.".format(N - len(data), MAX_PRICE))
     printv("Resulting number of listings: {}.".format(len(data)), "\n")
 
+    # Clip certain columns' values to an interval
+    data = clip_vals(data, (0, 30), "maximum_nights")
+
+    # TODO: TEST
+    # Scale all columns to the interval (1,10)
+    data = scale_vals(data, (1, 10))
+
+    # Look for occurrence of "metro" ==> new boolean column "has_metro"
+    #data = create_boolean_keyword(data, "metro", "has_metro")
+    # TODO: replace with distance_to_metro
     if RANDOMIZE_LISTINGS:
         np.random.seed(0)
         data = data.reindex(np.random.permutation(data.index))
@@ -119,7 +135,25 @@ def preprocess_data(csvfile):
     return data
 
 
-def clip_vals(data, columns, interval):
+def scale_vals(data, interval, columns=None):
+    """
+    Scales values of column(s) to an interval.
+    """
+    scaler = MinMaxScaler(feature_range=interval)
+
+    if not columns is None and not isinstance(columns, list):
+        columns = [columns]
+
+    if columns is None:
+        # Take all columns except for 'price'
+        columns = [c for c in data.columns if c not in ['price']]
+
+    data[columns] = scaler.fit_transform(data[columns])
+
+    return data
+
+
+def clip_vals(data, interval, columns):
     """
     Clips values of column(s) to an interval.
     """
@@ -371,7 +405,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--noverbose',
-        help='Disable output verbosity',
+        help='Disable printing verbosity',
         action='store_true'
     )
     parser.add_argument(
@@ -398,19 +432,6 @@ if __name__ == '__main__':
     # Output both y-vectors to CSV-file
     train_data["price"].to_csv(args.train_y_output, index=False)
     test_data["price"].to_csv(args.test_y_output, index=False)
-
-    # Remove columns used only for preprocessing
-    del data["summary"]
-    del data["description"]
-    del data["neighborhood_overview"]
-    del data["transit"]
-    del data["neighbourhood_cleansed"]
-    del data["longitude"]
-    del data["latitude"]
-
-    # Remove boolean inputs
-    del data["host_identity_verified"]
-    del data["instant_bookable"]
 
     # Cluster listings by price
     # TODO: verify clustering method
