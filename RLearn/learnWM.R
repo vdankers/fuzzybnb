@@ -4,22 +4,16 @@ method.type <- "WM"
 control <- list(num.labels = 8, type.mf = "GAUSSIAN", type.tnorm = "PRODUCT",
   type.defuz = "COG", type.implication.func = "DIENES_RESHER", name = "fuzzybnbWM")
 
-
-# Learn rules, to get membership functions
-# explanation of arguments:
-# https://www.rdocumentation.org/packages/frbs/versions/3.1-0/topics/frbs.learn
+# Get FRBS object
 object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
-# show membership functions
-
 print("Learning phase is over, starting testing")
-
 res.test <- predict(object.reg, data.test)
 
 # show MAE
 error = sum(abs(data.targets-res.test))/length(data.targets)
 print(error)
-save.image(file=im)
+save.image(file="Latest-wm")
 
 
 # plot some figures
