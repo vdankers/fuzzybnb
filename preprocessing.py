@@ -1,30 +1,70 @@
 #!/usr/bin/python
 
 """
-Date        : december 2016
-Course      : Fundamentals of Fuzzy Logic, UvA
-Project name: Fuzzy Bed and Breakfast
-Students    : David Smelt, Alex Khawalid, Verna Dankers
+Date         : december 2016
+Course       : Fundamentals of Fuzzy Logic, UvA
+Project name : Fuzzy Bed and Breakfast
+Students     : David Smelt, Alex Khawalid, Verna Dankers
 
-Description : Preprocesses data
-Usage       : python preprocessing.py input_data.csv output_prices.csv output_results.csv
+Description  : Preprocesses data
+Cmdline args : input_csv fraction_train_set output_prices.csv output_results.csv
+               --noverbose --norandom
+Example usage: input_data.csv 0.8 --noverbose --norandom
+               ... will hide verbose output
+               ... will not randomize input data rows
+               ... will output training(0.8) X -> train_features.csv
+                               training(0.8) y -> train_prices.csv 
+                                   test(0.2) X -> test_features.csv
+                                   test(0.2) y -> test_prices.csv 
 """
 
+from __future__ import print_function
 import argparse
-import pandas
+import pandas as pd
 import math
 import csv
 import numpy as np
+from decimal import Decimal, ROUND_HALF_UP
 from math import radians, cos, sin, asin, sqrt
 from sklearn.cluster import Birch
 from sklearn.linear_model import Ridge
+from sklearn.preprocessing import MinMaxScaler
 from collections import Counter
+
+"""
+Global variables for: - VERBOSITY,
+                        ... passing argument --noverbose will set it to False;
+                      - randomized order of listings,
+                        ... passing argument --norandom will set it to False
+                      - maximum price for a listing to be included
+"""
+VERBOSITY = True
+RANDOMIZE_LISTINGS = True
+MAX_PRICE = 500
+
+
+def printv(*args):
+    """
+    Prints lines if VERBOSITY == True
+    """
+    global VERBOSITY
+    if VERBOSITY:
+        for a in args:
+            if a == "\n":
+                print()
+            else:
+                print(a, end=" ")
+        print()
+
 
 def preprocess_data(csvfile):
     """
     Remove and adapt columns for the Airbnb data file at a given
     location.
     """
+    global RANDOMIZE_LISTINGS
+    global MAX_PRICE
+
     columns = ["host_acceptance_rate","host_response_rate",
     "host_total_listings_count","accommodates","bathrooms","bedrooms","beds",
     "amenities","price","cleaning_fee","guests_included","extra_people",
@@ -46,8 +86,8 @@ def preprocess_data(csvfile):
     "review_scores_location","review_scores_value",
     "calculated_host_listings_count","reviews_per_month","guests_included"]
 
-    pandas.options.mode.chained_assignment = None
-    data = pandas.read_csv(csvfile,usecols=columns)
+    pd.options.mode.chained_assignment = None
+    data = pd.read_csv(csvfile,usecols=columns)
 
     data = convert_true_false(data, ["instant_bookable","host_identity_verified"])
     data = transform_percentage(data, ["host_acceptance_rate","host_response_rate"])
@@ -63,13 +103,21 @@ def preprocess_data(csvfile):
     data = clip_vals(data, "distance_to_dam", (0.0, 10.0))
 
     # Look for occurrence of "metro" ==> new boolean column "has_metro"
-    data = create_boolean_keyword(data, "metro", "has_metro")
+    #data = create_boolean_keyword(data, "metro", "has_metro")
+    # TODO: replace with distance_to_metro
 
-    data = data[data.price < 500]
+    # Remove outliers where listing price > MAX_PRICE
+    N = len(data)
+    data = data[data.price <= MAX_PRICE]
+    printv("Pruned {} listings for having price > {}.".format(N - len(data), MAX_PRICE))
+    printv("Resulting number of listings: {}.".format(len(data)), "\n")
 
-    data = data.reindex(np.random.permutation(data.index))
+    if RANDOMIZE_LISTINGS:
+        np.random.seed(0)
+        data = data.reindex(np.random.permutation(data.index))
 
     return data
+
 
 def clip_vals(data, columns, interval):
     """
@@ -79,7 +127,9 @@ def clip_vals(data, columns, interval):
         columns = [columns]
     for column in columns:
         data[column] = data[column].clip(interval[0], interval[1])
+
     return data
+
 
 def transform_percentage(data, columns):
     """
@@ -94,6 +144,7 @@ def transform_percentage(data, columns):
                 data[column][i] = int(entry[:-1])
     return data
 
+
 def fill_empty_entries(data, columns):
     """
     Replaces empty entries by a zero in the given columns
@@ -103,7 +154,9 @@ def fill_empty_entries(data, columns):
         for i, entry in enumerate(data[column]):
             if not entry or math.isnan(entry):
                 data[column][i] = 0
+
     return data
+
 
 def count_elements(data, columns):
     """
@@ -113,7 +166,9 @@ def count_elements(data, columns):
     for column in columns:
         for i, entry in enumerate(data[column]):
             data[column][i] = len(entry.split(","))
+
     return data
+
 
 def remove_dollar(data, columns):
     """
@@ -128,7 +183,9 @@ def remove_dollar(data, columns):
                 if "," in entry:
                     entry = entry.replace(",","")
                 data[column][i] = float(entry[1:])
+
     return data
+
 
 def convert_true_false(data, columns):
     """
@@ -141,7 +198,9 @@ def convert_true_false(data, columns):
                 data[column][i] = 1
             else:
                 data[column][i] = 0
+
     return data
+
 
 def transform_host_reponse(data, column):
     """
@@ -157,7 +216,9 @@ def transform_host_reponse(data, column):
             data[column][i] = 1
         elif entry == "within a day":
             data[column][i] = 3
+
     return data
+
 
 def transform_cancellation_policy(data, column):
     """
@@ -171,13 +232,19 @@ def transform_cancellation_policy(data, column):
             data[column][i] = 1
         elif entry == "flexible":
             data[column][i] = 0
+
     return data
 
-# SOURCE: http://stackoverflow.com/questions/4913349/haversine-formula-in-
-# python-bearing-and-distance-between-two-gps-points
+
 def distance_from_locations(data, lat, lon):
-    data["distance_to_dam"] = pandas.Series(np.zeros(len(data)), index=data.index)
+    """
+    Calculates the distance to the Dam of Amsterdam in kilometers.
+    SOURCE: http://stackoverflow.com/questions/4913349/haversine-formula-in-
+    python-bearing-and-distance-between-two-gps-points
+    """
+    data["distance_to_dam"] = pd.Series(np.zeros(len(data)), index=data.index)
     dam = (52.373, 4.8932)
+
     for i, entry in enumerate(data[lat]):
         location = (entry, data[lon][i])
         lon1, lat1, lon2, lat2 = map(radians, [location[1], location[0], dam[1], dam[0]])
@@ -185,109 +252,154 @@ def distance_from_locations(data, lat, lon):
         dlat = lat2 - lat1
         a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
         c = 2 * asin(sqrt(a))
-        distance = 6367 * c
+        distance = Decimal(6367 * c)
 
-        # round distance to 3 decimals with Python2 string formatting
-        # data["distance_to_dam"][i] = "{:10.3f}".format(round(distance, 3))
-        data["distance_to_dam"][i] = distance
-        #print distance, "->", data["distance_to_dam"][i]
+        # round distance to 3 decimals
+        data["distance_to_dam"][i] = float(distance.quantize(Decimal('.001'), rounding=ROUND_HALF_UP))
+        # TODO: don't round?:
+        # data["distance_to_dam"][i] = 6367 * c
+
     return data
+
 
 def create_boolean_keyword(data, keyword, new_col_name, case=False):
     """
     Creates new binary boolean column corresponding to the occurrence of
     'keyword' in any of the listing's strings.
+    Not applied yet.
     """
-    data[new_col_name] = pandas.Series(np.zeros(len(data), dtype=np.int), index=data.index)
+    data[new_col_name] = pd.Series(np.zeros(len(data), dtype=np.int), index=data.index)
     count = 0
     for i, entry in data.iterrows():
         if any(entry.str.contains(keyword, case=case, na=False, regex=False)):
             data[new_col_name][i] = 1
             count += 1
 
-    print "Found {0} occurrences out of {1} for '{2}'.".format(count, len(data), keyword)
+    printv("Found {} occurrences out of {} for '{}'.".format(count, len(data), keyword))
+
     return data
 
-def select_features(X, y, names, nfeat, verbose=True):
+
+def select_features(X, y, names, nfeat):
     """
     Selects nfeat features from data, by L2 Ridge regression
     """
     result = []
-    frac = 0
+    sum_coefs_selected = 0
+    sum_coefs_unselected = 0
 
     ridge = Ridge(alpha=10)
     ridge.fit(X, y)
-    if verbose:
-        print "Selecting top {} features from Ridge feature ranking:".format(nfeat)
+    printv("Selecting top {} features from Ridge feature ranking:".format(nfeat))
 
     zipped = zip(np.abs(ridge.coef_), names)
     lst = sorted(zipped, key = lambda x:-np.abs(x[0]))
-    for coef, name in lst[0:nfeat]:
-        result += [name]
-        frac += coef
-        if verbose:
-            print round(coef, 3), name
 
-    if verbose:
-        print "Selected features comprise {}% of Ridge regression coefficients.".format(round(frac * 100, 2))
+    for i, (coef, name) in enumerate(lst):
+        if i < nfeat:
+            result += [name]
+            sum_coefs_selected += coef
+        elif i == nfeat:
+            printv("Not selected:")
+        else:
+            sum_coefs_unselected += coef
+
+        printv(round(coef, 3), name)
+
+    frac_selected = sum_coefs_selected / (sum_coefs_selected + sum_coefs_unselected)
+    printv("\n", "Selected features comprise {}% of Ridge regression coefficients.".format(
+           round(frac_selected * 100, 2)))
 
     return result
 
+
+def fraction_train_set_float(f):
+    """
+    Restricts fraction of training set to range [0.05, 0.95]
+    """
+    f = float(f)
+    if f < 0.05 or f > 0.95:
+        raise argparse.ArgumentTypeError("%r not in range [0.05, 0.95]" % (f,))
+
+    return f
+
+
 if __name__ == '__main__':
+
+    # Define command line arguments
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         fromfile_prefix_chars='@',
     )
-
     parser.add_argument(
         'input',
-        help="Csv file with input data",
-        default='setje.csv', # first 1000 listings
+        help='Csv file with input data',
+        default='setje.csv', # reduced dimension input data set
         nargs='?'
     )
-
+    parser.add_argument(
+        'fraction_train_set',
+        help='Fraction of training set to use, between 0.05 and 0.95',
+        default=0.8,
+        type=fraction_train_set_float,
+        nargs='?'
+    )
     parser.add_argument(
         'train_x_output',
-        help="Name for csv file to write output to",
+        help='Name for csv file to write output to',
         default='train_features.csv',
         nargs='?'
     )
-
     parser.add_argument(
         'test_x_output',
-        help="Name for csv file to write output to",
+        help='Name for csv file to write output to',
         default='test_features.csv',
         nargs='?'
     )
-
     parser.add_argument(
         'train_y_output',
-        help="Name for csv file to write output to",
+        help='Name for csv file to write output to',
         default='train_prices.csv',
         nargs='?'
     )
-
     parser.add_argument(
         'test_y_output',
-        help="Name for csv file to write output to",
+        help='Name for csv file to write output to',
         default='test_prices.csv',
         nargs='?'
     )
+    parser.add_argument(
+        '--noverbose',
+        help='Disable output verbosity',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--norandom',
+        help='Disable random shuffling of input rows',
+        action='store_true'
+    )
 
+    # Parse arguments
     args = parser.parse_args()
+    if (args.noverbose):
+        VERBOSITY = False
+    if (args.norandom):
+        RANDOMIZE_LISTINGS = False
 
+    # Preprocess data
     data = preprocess_data(args.input)
 
-    n = int(len(data)*0.8)
-
+    # Split data into a train and test set
+    n = int(len(data) * args.fraction_train_set)
     train_data = data[0:n]
     test_data = data[n:]
 
-    train_data["price"].to_csv(args.train_y_output)
-    test_data["price"].to_csv(args.test_y_output)
+    # Output both y-vectors to CSV-file
+    train_data["price"].to_csv(args.train_y_output, index=False)
+    test_data["price"].to_csv(args.test_y_output, index=False)
 
-
+    # Remove columns used only for preprocessing
     del data["summary"]
     del data["description"]
     del data["neighborhood_overview"]
@@ -299,23 +411,25 @@ if __name__ == '__main__':
     # Remove boolean inputs
     del data["host_identity_verified"]
     del data["instant_bookable"]
-    del data["has_metro"]
 
     # Cluster listings by price
+    # TODO: verify clustering method
     X1 = data.as_matrix(columns=["price"])
+    clustered = Birch(n_clusters=7).fit(X1)
+    printv("Price clusters: " + str(Counter(clustered.labels_)))
 
-    clustered = Birch(n_clusters=6).fit(X1)
-    print "Price clusters: " + str(Counter(clustered.labels_))
-
+    # Remove y-vectors from datasets
     del data["price"]
     del train_data["price"]
     del test_data["price"]
 
-
     # Select 10 most important features as resulting columns
+    # TODO: improve feature selection
     X = data.as_matrix()
     y = clustered.labels_
     names = list(data.columns.values)
     selected = select_features(X, y, names, 10)
+
+    # Output both X-vectors to their respective CSV-files
     train_data[selected].to_csv(args.train_x_output)
     test_data[selected].to_csv(args.test_x_output)
