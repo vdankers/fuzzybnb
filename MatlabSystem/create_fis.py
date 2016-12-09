@@ -249,12 +249,12 @@ if __name__ == '__main__':
     parser.add_argument(
         'train_x',
         help='CSV file with features of accommodations',
-        default='train_features.csv'
+        default='Data/train_features.csv'
     )
     parser.add_argument(
         'train_y',
         help='CSV file with prices of accommodations',
-        default='train_prices.csv'
+        default='Data/train_prices.csv'
     )
     parser.add_argument(
         'mf_input',
