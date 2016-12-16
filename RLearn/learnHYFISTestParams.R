@@ -2,6 +2,8 @@
 method.type <- "HYFIS"
 
 for (num_inps in c(3,4,7,8)) {
+
+
   # reduce inputs for HYFIS and ANFIS
   data.train <- cbind(data.train[,1:num_inps],prices)
   data.test <- data.test[,1:num_inps]
@@ -14,8 +16,7 @@ for (num_inps in c(3,4,7,8)) {
       type.tnorm = "PRODUCT", type.defuz = "COG", type.implication.func = "DIENES_RESHER",
       name = "fuzzybnbHYFIS")
 
-
-    object.reg <- frbs.learn(data.train, range.data[,1:num_inps], method.type, control)
+    object.reg <- frbs.learn(data.train, cbind(range.data[,1:num_inps],range.data[,ncol(range.data)]), method.type, control)
 
     # show membership functions
     pdf("Rplots/HYFISMF.pdf")

@@ -28,6 +28,7 @@ data.targets <- data.targets[,1]
 combinedtest <- cbind(data.test,data.targets)
 colnames(combinedtest)[ncol(combinedtest)] <- "prices"
 
+# get range of inputs
 range.data <- matrix(apply(rbind(data.train,combinedtest), 2, range), nrow=2)
 
 # split test into cv and test
@@ -39,8 +40,6 @@ data.targets <- data.targets[(0.5*length(data.targets)):length(data.targets)]
 
 # number of inputs for HYFIS and ANFIS
 num_inps <- 4
-
-# get range of inputs
 
 # source("learnWMTestParams.R")
 # source("learnWM.R")
