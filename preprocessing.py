@@ -13,9 +13,9 @@ Example usage: input_data.csv 0.8 --noverbose --norandom
                ... will hide verbose output
                ... will not randomize input data rows
                ... will output training(0.8) X -> train_features.csv
-                               training(0.8) y -> train_prices.csv 
+                               training(0.8) y -> train_prices.csv
                                    test(0.2) X -> test_features.csv
-                                   test(0.2) y -> test_prices.csv 
+                                   test(0.2) y -> test_prices.csv
 """
 
 from __future__ import print_function
@@ -40,7 +40,7 @@ Global variables for: - print verbosity,
 """
 VERBOSITY = True
 RANDOMIZE_LISTINGS = True
-MAX_PRICE = 500
+MAX_PRICE = 200
 
 
 def printv(*args):
@@ -76,7 +76,7 @@ def preprocess_data(csvfile):
     "calculated_host_listings_count","reviews_per_month",
     "latitude","longitude","summary","description","neighborhood_overview",
     "transit","host_response_time","host_identity_verified",
-    "neighbourhood_cleansed","cancellation_policy"]
+    "neighbourhood_cleansed","cancellation_policy","property_type"]
 
     possible_empty = ["host_total_listings_count","accommodates","bathrooms",
     "bedrooms","beds","minimum_nights","maximum_nights","availability_30",
@@ -98,15 +98,18 @@ def preprocess_data(csvfile):
     data = transform_host_reponse(data, "host_response_time")
     data = distance_from_locations(data, "latitude", "longitude")
     data = transform_cancellation_policy(data, "cancellation_policy")
+    data = data[data.property_type == "Apartment"]
 
     # Remove obsolete columns
     del data["summary"]
+    del data["property_type"]
     del data["description"]
     del data["neighborhood_overview"]
     del data["transit"]
     del data["neighbourhood_cleansed"]
     del data["longitude"]
     del data["latitude"]
+    del data["host_response_time"]
 
     # Remove boolean columns
     del data["host_identity_verified"]
@@ -123,7 +126,7 @@ def preprocess_data(csvfile):
 
     # TODO: TEST
     # Scale all columns to the interval (1,10)
-    data = scale_vals(data, (1, 10))
+    #data = scale_vals(data, (1, 10))
 
     # Look for occurrence of "metro" ==> new boolean column "has_metro"
     #data = create_boolean_keyword(data, "metro", "has_metro")
@@ -289,7 +292,7 @@ def distance_from_locations(data, lat, lon):
         distance = Decimal(6367 * c)
 
         # round distance to 3 decimals
-        data["distance_to_dam"][i] = float(distance.quantize(Decimal('.001'), rounding=ROUND_HALF_UP))
+        data["distance_to_dam"][i] = distance#float(distance.quantize(Decimal('.001'), rounding=ROUND_HALF_UP))
         # TODO: don't round?:
         # data["distance_to_dam"][i] = 6367 * c
 
@@ -392,6 +395,12 @@ if __name__ == '__main__':
         nargs='?'
     )
     parser.add_argument(
+        'cross_x_output',
+        help='Name for csv file to write output to',
+        default='cross_features.csv',
+        nargs='?'
+    )
+    parser.add_argument(
         'train_y_output',
         help='Name for csv file to write output to',
         default='train_prices.csv',
@@ -401,6 +410,12 @@ if __name__ == '__main__':
         'test_y_output',
         help='Name for csv file to write output to',
         default='test_prices.csv',
+        nargs='?'
+    )
+    parser.add_argument(
+        'cross_y_output',
+        help='Name for csv file to write output to',
+        default='cross_prices.csv',
         nargs='?'
     )
     parser.add_argument(
@@ -426,12 +441,17 @@ if __name__ == '__main__':
 
     # Split data into a train and test set
     n = int(len(data) * args.fraction_train_set)
+    m = int(0.5*(len(data)-n))
+    print('n ',n)
+    print('m ',m)
     train_data = data[0:n]
-    test_data = data[n:]
+    test_data = data[n:m+n]
+    cross_data = data[m+n:]
 
     # Output both y-vectors to CSV-file
     train_data["price"].to_csv(args.train_y_output, index=False, decimal='.')
     test_data["price"].to_csv(args.test_y_output, index=False, decimal='.')
+    cross_data["price"].to_csv(args.cross_y_output, index=False, decimal='.')
 
     # Cluster listings by price
     # TODO: verify clustering method
@@ -443,6 +463,7 @@ if __name__ == '__main__':
     del data["price"]
     del train_data["price"]
     del test_data["price"]
+    del cross_data["price"]
 
     # Select 10 most important features as resulting columns
     # TODO: improve feature selection
@@ -454,3 +475,4 @@ if __name__ == '__main__':
     # Output both X-vectors to their respective CSV-files
     train_data[selected].to_csv(args.train_x_output, decimal='.')
     test_data[selected].to_csv(args.test_x_output, decimal='.')
+    cross_data[selected].to_csv(args.cross_x_output, decimal='.')
