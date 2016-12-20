@@ -24,8 +24,8 @@ import pandas as pd
 import math
 import csv
 import numpy as np
+from ast import literal_eval
 from decimal import Decimal, ROUND_HALF_UP
-from math import radians, cos, sin, asin, sqrt
 from sklearn.cluster import Birch
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import MinMaxScaler
@@ -36,10 +36,12 @@ Global variables for: - print verbosity,
                         ... passing argument --noverbose will set it to False;
                       - randomized order of listings,
                         ... passing argument --norandom will set it to False
-                      - maximum price for a listing to be included
 """
 VERBOSITY = True
 RANDOMIZE_LISTINGS = True
+
+METRO_LOCATIONS_FILE = "Amsterdam_metro_locations.txt"
+PROPERTY_TYPE = "Apartment"
 MAX_PRICE = 200
 
 
@@ -72,11 +74,11 @@ def preprocess_data(csvfile):
     "availability_90","availability_365","number_of_reviews",
     "review_scores_rating","review_scores_accuracy","review_scores_cleanliness",
     "review_scores_checkin","review_scores_communication",
-    "review_scores_location","review_scores_value","instant_bookable",
+    "review_scores_location","review_scores_value",
     "calculated_host_listings_count","reviews_per_month",
     "latitude","longitude","summary","description","neighborhood_overview",
-    "transit","host_response_time","host_identity_verified",
-    "neighbourhood_cleansed","cancellation_policy","property_type"]
+    "transit","host_response_time","neighbourhood_cleansed",
+    "cancellation_policy","property_type"]
 
     possible_empty = ["host_total_listings_count","accommodates","bathrooms",
     "bedrooms","beds","minimum_nights","maximum_nights","availability_30",
@@ -90,15 +92,19 @@ def preprocess_data(csvfile):
     data = pd.read_csv(csvfile,usecols=columns)
 
     # Ensure all features are converted to floats
-    #data = convert_true_false(data, ["instant_bookable","host_identity_verified"])
     data = transform_percentage(data, ["host_acceptance_rate","host_response_rate"])
     data = fill_empty_entries(data, possible_empty)
     data = count_elements(data, ["amenities"])
-    data = remove_dollar(data, ["price","cleaning_fee","extra_people"])
     data = transform_host_reponse(data, "host_response_time")
-    data = distance_from_locations(data, "latitude", "longitude")
     data = transform_cancellation_policy(data, "cancellation_policy")
-    data = data[data.property_type == "Apartment"]
+    data = remove_dollar(data, ["price","cleaning_fee","extra_people"])
+
+    # Add custom features "distance_to_dam" and "distance_to_metro"
+    data = create_distance_to_dam(data, "latitude", "longitude")
+    data = create_distance_to_metro(data, "latitude", "longitude")
+
+    # Limit accomodations to apartments only
+    data = data[data.property_type == PROPERTY_TYPE]
 
     # Remove obsolete columns
     del data["summary"]
@@ -110,10 +116,6 @@ def preprocess_data(csvfile):
     del data["longitude"]
     del data["latitude"]
     del data["host_response_time"]
-
-    # Remove boolean columns
-    del data["host_identity_verified"]
-    del data["instant_bookable"]
 
     # Remove outliers where listing price > MAX_PRICE
     N = len(data)
@@ -128,9 +130,6 @@ def preprocess_data(csvfile):
     # Scale all columns to the interval (1,10)
     #data = scale_vals(data, (1, 10))
 
-    # Look for occurrence of "metro" ==> new boolean column "has_metro"
-    #data = create_boolean_keyword(data, "metro", "has_metro")
-    # TODO: replace with distance_to_metro
     if RANDOMIZE_LISTINGS:
         np.random.seed(0)
         data = data.reindex(np.random.permutation(data.index))
@@ -224,21 +223,6 @@ def remove_dollar(data, columns):
     return data
 
 
-def convert_true_false(data, columns):
-    """
-    Converts the 't' of true and 'f' of false into 1 and 0
-    respectively, for the given columns in the data set.
-    """
-    for column in columns:
-        for i, entry in enumerate(data[column]):
-            if entry == "t":
-                data[column][i] = 1
-            else:
-                data[column][i] = 0
-
-    return data
-
-
 def transform_host_reponse(data, column):
     """
     Replaces alphabetical values for the host response column into
@@ -273,28 +257,58 @@ def transform_cancellation_policy(data, column):
     return data
 
 
-def distance_from_locations(data, lat, lon):
+def distance_between_locations(loc1, loc2):
     """
-    Calculates the distance to the Dam of Amsterdam in kilometers.
+    Returns the distance between loc1 (lat, lon) and loc2 (lat, lon) in meters.
     SOURCE: http://stackoverflow.com/questions/4913349/haversine-formula-in-
     python-bearing-and-distance-between-two-gps-points
     """
-    data["distance_to_dam"] = pd.Series(np.zeros(len(data)), index=data.index)
+    lon1, lat1, lon2, lat2 = map(np.radians, [loc1[1], loc1[0], loc2[1], loc2[0]])
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+    c = 2 * np.arcsin(np.sqrt(a))
+    distance = Decimal(6367 * c)
+
+    # round distance to 3 decimals
+    #return float(distance.quantize(Decimal('.001'), rounding=ROUND_HALF_UP))
+    return distance
+
+
+def create_distance_to_metro(data, Lat, Lon):
+    """
+    Creates new feature column with the distance to the nearest metro station
+    in kilometers.
+    """
+    data["distance_to_metro"] = pd.Series(np.zeros(len(data)), index=data.index)
+    metro_locs = []
+
+    with open(METRO_LOCATIONS_FILE) as f:
+        metro_locs = f.read().splitlines()
+
+    for i, entry in enumerate(data[Lat]):
+        distances = []
+        location = (entry, data[Lon][i])
+
+        for l in metro_locs:
+            distances += [distance_between_locations(literal_eval(l)[1:], location)]
+
+        data["distance_to_metro"][i] = min(distances)
+
+    return data
+
+
+def create_distance_to_dam(data, Lat, Lon):
+    """
+    Creates new feature column with the distance to the Dam of Amsterdam in
+    kilometers.
+    """
     dam = (52.373, 4.8932)
+    data["distance_to_dam"] = pd.Series(np.zeros(len(data)), index=data.index)
 
-    for i, entry in enumerate(data[lat]):
-        location = (entry, data[lon][i])
-        lon1, lat1, lon2, lat2 = map(radians, [location[1], location[0], dam[1], dam[0]])
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-        c = 2 * asin(sqrt(a))
-        distance = Decimal(6367 * c)
-
-        # round distance to 3 decimals
-        data["distance_to_dam"][i] = distance#float(distance.quantize(Decimal('.001'), rounding=ROUND_HALF_UP))
-        # TODO: don't round?:
-        # data["distance_to_dam"][i] = 6367 * c
+    for i, entry in enumerate(data[Lat]):
+        location = (entry, data[Lon][i])
+        data["distance_to_dam"][i] = distance_between_locations(dam, location)
 
     return data
 
@@ -303,7 +317,6 @@ def create_boolean_keyword(data, keyword, new_col_name, case=False):
     """
     Creates new binary boolean column corresponding to the occurrence of
     'keyword' in any of the listing's strings.
-    Not applied yet.
     """
     data[new_col_name] = pd.Series(np.zeros(len(data), dtype=np.int), index=data.index)
     count = 0
@@ -456,7 +469,7 @@ if __name__ == '__main__':
     # Cluster listings by price
     # TODO: verify clustering method
     X1 = data.as_matrix(columns=["price"])
-    clustered = Birch(n_clusters=7).fit(X1)
+    clustered = Birch(n_clusters=12).fit(X1)
     printv("Price clusters: " + str(Counter(clustered.labels_)))
 
     # Remove y-vectors from datasets
