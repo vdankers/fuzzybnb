@@ -4,7 +4,8 @@ method.type <- "WM"
 control <- list(num.labels = 8, type.mf = "GAUSSIAN", type.tnorm = "PRODUCT",
   type.defuz = "COG", type.implication.func = "DIENES_RESHER", name = "fuzzybnbWM")
 
-# Get FRBS object
+
+# Get frbs object
 object.reg <- frbs.learn(data.train, range.data, method.type, control)
 
 print("Learning phase is over, starting testing")
@@ -13,7 +14,8 @@ res.test <- predict(object.reg, data.test)
 # show MAE
 error = sum(abs(data.targets-res.test))/length(data.targets)
 print(error)
-save.image(file="Latest-wm")
+
+save.image(file="Latest-optimal-wm")
 
 
 # plot some figures
@@ -27,18 +29,27 @@ pdf("Rplots/WMErrorRatio.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
 plotthis <- c()
-i <- 1
-while (i < 200) {
-  plotthis[i] <- length(which(abs(res.test-data.targets)>i))/length(data.targets)
-  i <- i + 1
+i <- 5
+while (i < 300) {
+  plotthis[i] <- length(which(abs(res.test-data.targets)<i))/length(data.targets)
+  i <- i + 5
 }
-plot(plotthis, xlab="error in amount of euros", ylab="percentage of data set with error higher than x")
+plot(plotthis, xlab="error in amount of euros", ylab="percentage of data set with error x or less")
 dev.off()
 
 
 pdf("Rplots/WMTargetsVsPredict.pdf")
 par("mar")
 par(mar=c(1,1,1,1))
-plot(res.test, col="red", ylab="prices", xlab="index")
-points(data.targets)
+plot(data.targets, col="red", ylab="prices", xlab="index")
+points(res.test)
+dev.off()
+
+pdf("Rlearn/WMErrorRatio.pdf")
+par("mar")
+par(mar=c(1,1,1,1))
+nums <- seq(0,1,0.01)
+plotthis <- c()
+for (num in nums) {plotthis <- c(plotthis, length(which(abs(res.test-data.targets)/data.targets<num))/length(data.targets)) }
+plot(plotthis,ylab="Percentage of the data which is off by x percent or less", xlab="Percentage by which the price is off" )
 dev.off()

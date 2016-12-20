@@ -6,7 +6,7 @@ defuzzes <- c("WAM", "FIRST.MAX", "LAST.MAX", "MEAN.MAX")
 imps <- c("DIENES_RESHER", "LUKASIEWICZ", "GOGUEN", "GODEL", "SHARP", "MIZUMOTO", "DUBOIS_PRADE")
 norms <- c("HAMACHER", "YAGER", "BOUNDED")
 
-for (numlab in c(6,7)) {
+for (numlab in c(3,4,6,7)) {
   control <- list(num.labels = numlab, type.mf = "GAUSSIAN", type.tnorm = "PRODUCT",
     type.defuz = "COG", type.implication.func = "ZADEH", name = "fuzzybnbWM")
 
@@ -15,11 +15,13 @@ for (numlab in c(6,7)) {
   print("Done learning, starting testing phase for:")
   print(as.character(numlab))
 
-  res.test <- predict(object.reg, data.test)
+  res.cv <- predict(object.reg, data.cv)
 
   # show MAE
-  error = sum(abs(data.targets-res.test))/length(data.targets)
+  error = sum(abs(data.cvtargets-res.cv))/length(data.cvtargets)
   print(error)
+  plot(data.cvtargets, col="red", ylab="prices", xlab="index")
+  points(res.cv)
 
   # save workspace for easy access and generating figures
   save.image(file=as.character(numlab))
@@ -34,12 +36,13 @@ for (mf in mfs) {
   print("Done learning, starting testing phase for:")
   print(mf)
 
-  res.test <- predict(object.reg, data.test)
+  res.cv <- predict(object.reg, data.cv)
 
   # show MAE
-  error = sum(abs(data.targets-res.test))/length(data.targets)
+  error = sum(abs(data.cvtargets-res.cv))/length(data.cvtargets)
   print(error)
-
+  plot(data.cvtargets, col="red", ylab="prices", xlab="index")
+  points(res.cv)
   # save workspace for easy access and generating figures
   save.image(file=as.character(mf))
 }
@@ -53,12 +56,13 @@ for (norm in norms) {
   print("Done learning, starting testing phase for:")
   print(norm)
 
-  res.test <- predict(object.reg, data.test)
+  res.cv <- predict(object.reg, data.cv)
 
   # show MAE
-  error = sum(abs(data.targets-res.test))/length(data.targets)
+  error = sum(abs(data.cvtargets-res.cv))/length(data.cvtargets)
   print(error)
-
+  plot(data.cvtargets, col="red", ylab="prices", xlab="index")
+  points(res.cv)
   # save workspace for easy access and generating figures
   save.image(file=norm)
 }
@@ -72,12 +76,13 @@ for (defuz in defuzzes) {
   print("Done learning, starting testing phase for:")
   print(defuz)
 
-  res.test <- predict(object.reg, data.test)
+  res.cv <- predict(object.reg, data.cv)
 
   # show MAE
-  error = sum(abs(data.targets-res.test))/length(data.targets)
+  error = sum(abs(data.cvtargets-res.cv))/length(data.cvtargets)
   print(error)
-
+  plot(data.cvtargets, col="red", ylab="prices", xlab="index")
+  points(res.cv)
   # save workspace for easy access and generating figures
   save.image(file=defuz)
 }
@@ -91,12 +96,13 @@ for (im in imps) {
   print("Done learning, starting testing phase for:")
   print(im)
 
-  res.test <- predict(object.reg, data.test)
+  res.cv <- predict(object.reg, data.cv)
 
   # show MAE
-  error = sum(abs(data.targets-res.test))/length(data.targets)
+  error = sum(abs(data.cvtargets-res.cv))/length(data.cvtargets)
   print(error)
-
+  plot(data.cvtargets, col="red", ylab="prices", xlab="index")
+  points(res.cv)
   # save workspace for easy access and generating figures
   save.image(file=im)
 }
