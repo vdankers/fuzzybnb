@@ -7,15 +7,17 @@ Project name : Fuzzy Bed and Breakfast
 Authors      : David Smelt, Alex Khawalid, Verna Dankers
 
 Description  : Preprocesses data
-Cmdline args : input_csv fraction_train_set output_prices.csv output_results.csv
+Cmdline args : input_csv fraction_train_set output_features.csv output_prices.csv
                --noverbose --norandom
 Example usage: input_data.csv 0.8 --noverbose --norandom
                ... will hide verbose output
                ... will not randomize input data rows
                ... will output training(0.8) X -> train_features.csv
                                training(0.8) y -> train_prices.csv
-                                   test(0.2) X -> test_features.csv
-                                   test(0.2) y -> test_prices.csv
+                                   test(0.1) X -> test_features.csv
+                                   test(0.1) y -> test_prices.csv
+                                  cross(0.1) X -> cross_features.csv
+                                  cross(0.1) y -> cross_prices.csv
 """
 
 from __future__ import print_function
@@ -26,7 +28,7 @@ import csv
 import numpy as np
 from ast import literal_eval
 from decimal import Decimal, ROUND_HALF_UP
-from sklearn.cluster import Birch
+from sklearn.cluster import AffinityPropagation
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import MinMaxScaler
 from collections import Counter
@@ -104,7 +106,10 @@ def preprocess_data(csvfile):
     data = create_distance_to_metro(data, "latitude", "longitude")
 
     # Limit accomodations to apartments only
+    N = len(data)
     data = data[data.property_type == PROPERTY_TYPE]
+    printv("Pruned {} listings for having property type != {}.".format(N - len(data), PROPERTY_TYPE))
+    printv("Resulting number of listings: {}.".format(len(data)), "\n")
 
     # Remove obsolete columns
     del data["summary"]
@@ -385,7 +390,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'input',
         help='Csv file with input data',
-        default='setje.csv', # reduced dimension input data set
+        default='listings.csv',
         nargs='?'
     )
     parser.add_argument(
@@ -467,9 +472,15 @@ if __name__ == '__main__':
     cross_data["price"].to_csv(args.cross_y_output, index=False, decimal='.')
 
     # Cluster listings by price
-    # TODO: verify clustering method
     X1 = data.as_matrix(columns=["price"])
-    clustered = Birch(n_clusters=12).fit(X1)
+    clustered = None
+    try:
+        # Load precomputed clusters from file
+        clustered = np.load("price_clusters")
+    except IOError:
+        # Else: 
+        clustered = AffinityPropagation(preference=-50, damping=0.94).fit(X1)
+
     printv("Price clusters: " + str(Counter(clustered.labels_)))
 
     # Remove y-vectors from datasets
