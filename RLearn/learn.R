@@ -17,29 +17,26 @@ library(frbs)
 options(max.print=999999999)
 
 # read data and remove id columns
-data.train <- read.csv("../train_features.csv", header=TRUE)
-prices <- read.csv("../train_prices.csv", header=FALSE)
-prices <- prices[,1]
-data.train <- cbind(data.train[,2:ncol(data.train)],prices)
+data.train <- read.csv("../Data/train_features.csv", header=TRUE)
+prices <- read.csv("../Data/train_prices.csv", header=TRUE)
+data.train <- cbind(data.train,prices)
 
-data.test <- read.csv("../test_features.csv", header=TRUE)
-data.test <- data.test[, 2:ncol(data.test)]
-data.targets <- read.csv("../test_prices.csv", header=FALSE)
-data.targets <- data.targets[,1]
+data.test <- read.csv("../Data/test_features.csv", header=TRUE)
+data.targets <- read.csv("../Data/test_prices.csv", header=TRUE)
+data.cv <- read.csv("../Data/cross_features.csv", header=TRUE)
+data.cvtargets <- read.csv("../Data/cross_prices.csv", header=TRUE)
 
 # combine test with targets to determine range
 combinedtest <- cbind(data.test,data.targets)
-colnames(combinedtest)[ncol(combinedtest)] <- "prices"
+colnames(combinedtest)[ncol(combinedtest)] <- "price"
+
+combinedcv <- cbind(data.cv,data.cvtargets)
+colnames(combinedcv)[ncol(combinedcv)] <- "price"
 
 # get range of inputs
-range.data <- matrix(apply(rbind(data.train,combinedtest), 2, range), nrow=2)
+range.data <- matrix(apply(rbind(data.train,combinedtest,combinedcv), 2, range), nrow=2)
 
-# split test into cv and test
-data.cv <- data.test[1:(0.5*nrow(data.test)),]
-data.cvtargets <- data.targets[1:(0.5*length(data.targets))]
 
-data.test <- data.test[(0.5*nrow(data.test)):nrow(data.test),]
-data.targets <- data.targets[(0.5*length(data.targets)):length(data.targets)]
 
 # number of inputs for HYFIS and ANFIS
 num_inps <- 7
