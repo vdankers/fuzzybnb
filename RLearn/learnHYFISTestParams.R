@@ -7,9 +7,15 @@ for (num_inps in c(3,4,7,8)) {
   # reduce inputs for HYFIS and ANFIS
   data.train <- cbind(data.train[,1:num_inps],prices)
   data.test <- data.test[,1:num_inps]
+  data.cv <- data.cv[,1:num_inps]
 
 
   for (labs in c(5,6,7)) {
+    print(labs)
+    print(num_inps)
+    print(cbind(range.data[,1:num_inps],range.data[,ncol(range.data)]))
+    print(ncol(data.train))
+    print(ncol(data.test))
 
     # a list with all parameters
     control <- list(num.labels = labs, max.iter = 100, step.size = 0.1,

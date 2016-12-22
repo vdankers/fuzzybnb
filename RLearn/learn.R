@@ -1,11 +1,14 @@
-# Date        : december 2016
+# Date        : December 22, 2016
 # Course      : Fundamentals of Fuzzy Logic, University of Amsterdam
 # Project name: Fuzzy Bed and Breakfast
 # Authors     : David Smelt, Alex Khawalid, Verna Dankers
 
 # Description : Run prediction engine on trainingset and run test on
-#				cross validation set/test set
-# Usage       : Rscript learn.R
+#       				cross validation set/test set
+#               To test run learnWM/learnHYFIS/learnANFIS.R
+#               To get results for parameter tweaking on cv run
+#               learnWMTestParams.R or learnHYFISTestParams.R
+# Usage       : Rscript learn.R or drag learn.R into R environment
 
 
 # set this to project directory
@@ -39,10 +42,11 @@ data.test <- data.test[(0.5*nrow(data.test)):nrow(data.test),]
 data.targets <- data.targets[(0.5*length(data.targets)):length(data.targets)]
 
 # number of inputs for HYFIS and ANFIS
-num_inps <- 4
+num_inps <- 7
 
+source("evalMethods.R")
 # source("learnWMTestParams.R")
-# source("learnWM.R")
+source("learnWM.R")
 # source("learnHYFIS.R")
-source("learnHYFISTestParams.R")
+# source("learnHYFISTestParams.R")
 # source("learnANFIS.R")
