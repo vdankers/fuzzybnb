@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Date         : december 2016
+Date         : December 22, 2016
 Course       : Fundamentals of Fuzzy Logic, University of Amsterdam
 Project name : Fuzzy Bed and Breakfast
 Authors      : David Smelt, Alex Khawalid, Verna Dankers
@@ -131,7 +131,6 @@ def preprocess_data(csvfile):
     # Clip certain columns' values to an interval
     data = clip_vals(data, (0, 30), "maximum_nights")
 
-    # TODO: TEST
     # Scale all columns to the interval (1,10)
     #data = scale_vals(data, (1, 10))
 
@@ -156,7 +155,6 @@ def scale_vals(data, interval, columns=None):
         columns = [c for c in data.columns if c not in ['price']]
 
     data[columns] = scaler.fit_transform(data[columns])
-
     return data
 
 
@@ -183,6 +181,7 @@ def transform_percentage(data, columns):
                 data[column][i] = 0
             elif type(entry) is str and "%" in entry:
                 data[column][i] = int(entry[:-1])
+
     return data
 
 
@@ -213,7 +212,7 @@ def count_elements(data, columns):
 
 def remove_dollar(data, columns):
     """
-    Remove dollar signs from entries of the given
+    Removes dollar signs from entries of the given
     columns of the data set.
     """
     for column in columns:
@@ -275,7 +274,7 @@ def distance_between_locations(loc1, loc2):
     c = 2 * np.arcsin(np.sqrt(a))
     distance = Decimal(6367 * c)
 
-    # round distance to 3 decimals
+    # Round distance to 3 decimals
     #return float(distance.quantize(Decimal('.001'), rounding=ROUND_HALF_UP))
     return distance
 
@@ -331,7 +330,6 @@ def create_boolean_keyword(data, keyword, new_col_name, case=False):
             count += 1
 
     printv("Found {} occurrences out of {} for '{}'.".format(count, len(data), keyword))
-
     return data
 
 
@@ -457,16 +455,14 @@ if __name__ == '__main__':
     # Preprocess data
     data = preprocess_data(args.input)
 
-    # Split data into a train and test set
+    # Split data into a training, test and cross-validation set
     n = int(len(data) * args.fraction_train_set)
     m = int(0.5*(len(data)-n))
-    print('n ',n)
-    print('m ',m)
     train_data = data[0:n]
     test_data = data[n:m+n]
     cross_data = data[m+n:]
 
-    # Output both y-vectors to CSV-file
+    # Output the three y-vectors to CSV-file
     train_data["price"].to_csv(args.train_y_output, index=False, decimal='.')
     test_data["price"].to_csv(args.test_y_output, index=False, decimal='.')
     cross_data["price"].to_csv(args.cross_y_output, index=False, decimal='.')
@@ -490,13 +486,12 @@ if __name__ == '__main__':
     del cross_data["price"]
 
     # Select 10 most important features as resulting columns
-    # TODO: improve feature selection
     X = data.as_matrix()
     y = clustered.labels_
     names = list(data.columns.values)
     selected = select_features(X, y, names, 10)
 
-    # Output both X-vectors to their respective CSV-files
+    # Output the three X-vectors to their respective CSV-files
     train_data[selected].to_csv(args.train_x_output, decimal='.')
     test_data[selected].to_csv(args.test_x_output, decimal='.')
     cross_data[selected].to_csv(args.cross_x_output, decimal='.')

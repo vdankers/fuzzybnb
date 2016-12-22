@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Date        : december 2016
+Date        : December 22, 2016
 Course      : Fundamentals of Fuzzy Logic, University of Amsterdam
 Project name: Fuzzy Bed and Breakfast
 Authors     : David Smelt, Alex Khawalid, Verna Dankers
